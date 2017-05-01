@@ -1,0 +1,119 @@
+﻿<Window x:Class="NewsLabel.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NewsLabel"
+        mc:Ignorable="d"
+        Title="NewsLabel" Height="860" Width="1440">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="110"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+            <Button TextBlock.FontSize="15" Content="Done" Width="160" Padding="15 5 15 5" Name="button_done" Click="button_done_click" Margin="0 0 25 0"></Button>
+            <Button TextBlock.FontSize="15" Content="Select Source File" Width="160" Padding="15 5 15 5" Name="button_selectfile" Click="button_selectfile_click"></Button>
+            <Button TextBlock.FontSize="15" Margin="25 0 0 0" Content="Select News File" Width="160" Padding="15 5 15 5" Name="button_selectnewsfile" Click="button_selectnewsfile_click"></Button>
+            <Button TextBlock.FontSize="15" Margin="25 0 0 0" Content="Start" Width="160" Padding="15 5 15 5" Name="button_start" Click="button_start_click"></Button>
+        </StackPanel>
+        <StackPanel Margin="5" Orientation="Vertical" Grid.Row="1">
+            <Rectangle Height="1" Fill="LightGray"></Rectangle>
+            <TextBlock Margin="0" Name="textblock_sourcefilepath" FontSize="15"></TextBlock>
+            <TextBlock Margin="0" Name="textblock_newsfilepath" FontSize="15"></TextBlock>
+            <TextBlock Margin="0" Name="textblock_outputfilepath" FontSize="15"></TextBlock>
+            <TextBlock Margin="0" Name="textblock_linenum" FontSize="15"></TextBlock>
+            <TextBlock Margin="0" Name="textblock_commontitlewords" FontSize="15"></TextBlock>
+        </StackPanel>
+        <Grid Grid.Row="2" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="1"></RowDefinition>
+                <RowDefinition Height="50"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Rectangle Grid.Row ="0" Fill="LightGray"></Rectangle>
+            <DockPanel Panel.ZIndex="2" Grid.Row="1" Background="Gray" Name="dockpanel_eof_mask" Visibility="Hidden">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontSize="36">
+                End of File
+                </TextBlock>
+            </DockPanel>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"></ColumnDefinition>
+                    <ColumnDefinition Width="5*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="0.5"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Grid.Column ="1" Fill="LightGray" Margin="0 10 0 10"></Rectangle>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="160"></RowDefinition>
+                            <RowDefinition Height="1"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Rectangle Grid.Row ="1" Fill="LightGray" Margin="5 0 10 0"></Rectangle>
+                        <DockPanel Grid.Row="0">
+                            <ScrollViewer  VerticalScrollBarVisibility="Auto" Margin="10">
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="28" TextWrapping="WrapWithOverflow" Name="textblock_news_1_title" >
+                                A short news title here
+                                </TextBlock>
+                            </ScrollViewer>
+                        </DockPanel>
+                        <DockPanel Grid.Row="2">
+                            <ScrollViewer CanContentScroll="False" VerticalScrollBarVisibility="Auto" Margin="10">
+                                <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" TextWrapping="WrapWithOverflow" Name="textblock_news_1_content">
+                                A short news content here
+                                </TextBlock>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Grid>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.5"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Grid.Column ="0" Fill="LightGray" Margin="0 10 0 10"></Rectangle>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="160"></RowDefinition>
+                            <RowDefinition Height="1"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Rectangle Grid.Row ="1" Fill="LightGray" Margin="10 0 5 0"></Rectangle>
+                        <DockPanel Grid.Row="0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="10">
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="28" TextWrapping="Wrap" Name="textblock_news_2_title">
+                                A really long news title here that involves many things like cats and dogs and cars and maps and people and many many more interesting things includeing tvs games and word records and really things you can't imagines like space suits, hamburgers and fun houses
+                            </TextBlock>
+                            </ScrollViewer>
+                        </DockPanel>
+                        <DockPanel Grid.Row="2">
+                            <ScrollViewer CanContentScroll="False" VerticalScrollBarVisibility="Auto" Margin="10">
+                                <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" TextWrapping="Wrap" Name="textblock_news_2_content">
+                                A really long news content here that involves many things like cats and dogs and cars and maps and people and many many more interesting things includeing tvs games and word records and really things you can't imagines like space suits, hamburgers and fun houses
+                                </TextBlock>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+            <Rectangle Grid.Row ="2" Fill="LightGray"></Rectangle>
+            <DockPanel Grid.Row="3" Margin="0 10 0 0">
+                <Button TextBlock.FontSize="15" Content="Overlap" Name="button_overlap" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Click="button_overlap_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Related" Name="button_related" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_related_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Contradict" Name="button_contradict" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_contrdict_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Follow-up" Name="button_followup" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_followup_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Not Related" Name="button_notrelated" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_notrelated_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Subsumption" Name="button_subsumption" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_subsumption_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Equivalent" Name="button_equivalent" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_equivalent_click"></Button>
+                <Button TextBlock.FontSize="15" Content="Previous" TextBlock.FontStyle="Oblique" Name="button_previous" DockPanel.Dock="Left" Width="150" HorizontalAlignment="Left" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_previous_click"></Button>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</Window>
