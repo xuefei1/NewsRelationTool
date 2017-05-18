@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -24,18 +26,31 @@ namespace NewsLabel
         UIController controller;
         NewsRelationConfig config;
         ChineseDateTimeMatcher matcher;
-        private readonly string NO_SRC_FILE_SELECTED = "(No source file selected)";
-        private readonly string SRC_FILE_HEADER = "Source file:    ";
-        private readonly string NEWS_CONTENT_FILE_HEADER = "Optional news content file:    ";
-        private readonly string OUTPUT_FILE_HEADER = "Output file:    ";
-        private readonly string COMMON_TITLE_WORDS_HEADER = "Common words in title:    ";
-        private readonly string LINE_NUM_HEADER = "Current line number in source file:    ";
-        private string sourceFilePath = "";
-        private string newsFilePath = "";
+        StreamWriter lockFileWriter;
+        private static readonly string NO_SRC_FILE_SELECTED = "(选择源文件来开始)";
+        private static readonly string SRC_FILE_HEADER = "源文件: ";
+        private static readonly string NEWS_CONTENT_FILE_HEADER = "内容文件: ";
+        private static readonly string OUTPUT_FILE_HEADER = "输出文件: ";
+        private static readonly string COMMON_TITLE_WORDS_HEADER = "标题中相同的词语数: ";
+        private static readonly string LINE_NUM_HEADER = "当前源文件行: ";
+        private static readonly string MASK_CONTENT_EOF = "没了";
+        private static readonly string MASK_CONTENT_LOADING = "读取中...";
+        private static readonly string DUPLICATE_INSTANCE = "程序已在当前文件夹中运行";
+        private static readonly string LOCK_FILE_FOLDER_NAME = "_tmp";
+        private static readonly string LOCK_FILE_NAME = "_lock";
+        private bool lockSuccess = false;
+
         public MainWindow()
         {
             InitializeComponent();
-            controller = new UIController();
+            if (!lockCurrDirectory())
+            {
+                displayMsgDialog(DUPLICATE_INSTANCE);
+                Close();
+                return;
+            }
+            lockSuccess = true;
+            controller = new UIController(3);
             config = new NewsRelationConfig();
             matcher = new ChineseDateTimeMatcher();
             controller.OnEndOfFileReached = onEndOfFileReached;
@@ -47,6 +62,54 @@ namespace NewsLabel
             onControllerInit();
         }
 
+        private bool lockCurrDirectory()
+        {
+            if (!Directory.Exists(LOCK_FILE_FOLDER_NAME))
+            {
+                Directory.CreateDirectory(LOCK_FILE_FOLDER_NAME);
+                return createLockFile();
+            }else
+            {
+                return false;
+            }
+        }
+
+        private void unlockCurrDirectory()
+        {
+            lockFileWriter?.Close();
+            if (Directory.Exists(LOCK_FILE_FOLDER_NAME))
+            {
+                Directory.Delete(LOCK_FILE_FOLDER_NAME, true);
+            }
+        }
+
+        private bool createLockFile()
+        {
+            string file = System.IO.Path.Combine(getLockDirectory(), LOCK_FILE_NAME);
+            if (!File.Exists(file))
+            {
+                lockFileWriter = new StreamWriter(new FileStream(file, FileMode.Create, FileAccess.ReadWrite));
+                return true;
+            }else
+            {
+                return false;
+            }
+        }
+
+        private string getLockDirectory()
+        {
+            string rootDirectory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            string directory = System.IO.Path.Combine(rootDirectory, LOCK_FILE_FOLDER_NAME);
+            return directory;
+        }
+
+        private void displayMsgDialog(string msg)
+        {
+            MessageBoxButton btnMessageBox = MessageBoxButton.OK;
+            MessageBoxImage icnMessageBox = MessageBoxImage.Warning;
+            MessageBoxResult rsltMessageBox = MessageBox.Show(msg, "", btnMessageBox, icnMessageBox);
+        }
+
         private void onControllerInit()
         {
             button_subsumption.Content += " (" + config.Subsumption + ")";
@@ -56,26 +119,19 @@ namespace NewsLabel
             button_followup.Content += " (" + config.FollowUp + ")";
             button_contradict.Content += " (" + config.Contradict + ")";
             button_equivalent.Content += " (" + config.Equivalent + ")";
-            button_start.IsEnabled = false;
             onNewsFileHandlerDestroy();
         }
 
         private void onNewsFileHandlerInit()
         {
-            button_start.IsEnabled = false;
-            button_selectnewsfile.IsEnabled = false;
             button_previous.IsEnabled = false;
-            button_selectfile.IsEnabled = false;
             dockpanel_eof_mask.Visibility = Visibility.Collapsed;
         }
 
         private void onNewsFileHandlerDestroy()
         {
-            button_done.IsEnabled = false;
-            button_selectfile.IsEnabled = true;
             button_previous.IsEnabled = false;
-            button_selectnewsfile.IsEnabled = true;
-            disableControlButtons();
+            disableLabelControlButtons();
             setDefaultNewsContent();
             textblock_sourcefilepath.Text = SRC_FILE_HEADER;
             textblock_newsfilepath.Text = NEWS_CONTENT_FILE_HEADER;
@@ -85,9 +141,20 @@ namespace NewsLabel
             dockpanel_eof_mask.Visibility = Visibility.Collapsed;
         }
 
-        private void disableControlButtons()
+        private void disableFileControlButtons()
         {
-            button_done.IsEnabled = false;
+            button_new_label.IsEnabled = false;
+            button_load.IsEnabled = false;
+        }
+
+        private void enableFileControlButtons()
+        {
+            button_new_label.IsEnabled = true;
+            button_load.IsEnabled = true;
+        }
+
+        private void disableLabelControlButtons()
+        {
             button_notrelated.IsEnabled = false;
             button_related.IsEnabled = false;
             button_followup.IsEnabled = false;
@@ -95,11 +162,11 @@ namespace NewsLabel
             button_overlap.IsEnabled = false;
             button_subsumption.IsEnabled = false;
             button_equivalent.IsEnabled = false;
+            button_toggle_uncertain.IsEnabled = false;
         }
 
-        private void enableControlButtons()
+        private void enableLabelControlButtons()
         {
-            button_done.IsEnabled = true;
             button_notrelated.IsEnabled = true;
             button_related.IsEnabled = true;
             button_followup.IsEnabled = true;
@@ -107,6 +174,7 @@ namespace NewsLabel
             button_overlap.IsEnabled = true;
             button_subsumption.IsEnabled = true;
             button_equivalent.IsEnabled = true;
+            button_toggle_uncertain.IsEnabled = true;
         }
 
         private void setDefaultNewsContent()
@@ -135,10 +203,16 @@ namespace NewsLabel
             textblock_commontitlewords.Text = COMMON_TITLE_WORDS_HEADER + controller.CurrentNewsPair.CommonTitleWords.ToString();
         }
 
+        private void displayLoadingScreen()
+        {
+            textblock_mask_content.Text = MASK_CONTENT_LOADING;
+            dockpanel_eof_mask.Visibility = Visibility.Visible;
+        }
+
         private void onEndOfFileReached(bool canGoToPrev)
         {
-            disableControlButtons();
-            button_done.IsEnabled = true;
+            disableLabelControlButtons();
+            textblock_mask_content.Text = MASK_CONTENT_EOF;
             dockpanel_eof_mask.Visibility = Visibility.Visible;
             setDefaultNewsContent();
             if (canGoToPrev)
@@ -154,7 +228,8 @@ namespace NewsLabel
         private void onPreviousPairLoad(bool canGoToPrev)
         {
             dockpanel_eof_mask.Visibility = Visibility.Collapsed;
-            enableControlButtons();
+            controller.WriteProgress();
+            enableLabelControlButtons();
             updateNewsPairText();
             if (canGoToPrev)
             {
@@ -164,12 +239,14 @@ namespace NewsLabel
             {
                 button_previous.IsEnabled = false;
             }
+            updateToggleButton();
         }
 
         private void onNextPairLoad(bool canGoToPrev)
         {
             dockpanel_eof_mask.Visibility = Visibility.Collapsed;
-            enableControlButtons();
+            controller.WriteProgress();
+            enableLabelControlButtons();
             updateNewsPairText();
             if (canGoToPrev)
             {
@@ -179,39 +256,27 @@ namespace NewsLabel
             {
                 button_previous.IsEnabled = false;
             }
+            updateToggleButton();
         }
 
-        private void updatePathText()
+        private void updateToggleButton()
         {
-            textblock_sourcefilepath.Text = SRC_FILE_HEADER + sourceFilePath;
-            textblock_newsfilepath.Text = NEWS_CONTENT_FILE_HEADER + newsFilePath;
-        }
-
-        private void button_selectfile_click(object sender, RoutedEventArgs e)
-        {
-            // Create OpenFileDialog 
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            // Set filter for file extension and default file extension 
-            dlg.DefaultExt = ".txt";
-            dlg.Filter = "All files (*.*)|*.*|CSV files (*.csv)|*.csv|Text files (*.txt)|*.txt";
-            // Display OpenFileDialog by calling ShowDialog method 
-            bool? result = dlg.ShowDialog();
-            if (result == true)
+            if(controller.CurrentNewsPair == null)
             {
-                sourceFilePath = dlg.FileName;
-                button_start.IsEnabled = true;
-                updatePathText();
+                return;
             }
-        }
-
-        private void button_done_click(object sender, RoutedEventArgs e)
-        {
-            controller.DestroyNewsFileHandler();
+            if (controller.CurrentNewsPair.LabelUncertain)
+            {
+                button_toggle_uncertain.IsChecked = true;
+            }else
+            {
+                button_toggle_uncertain.IsChecked = false;
+            }
         }
 
         private void tmpDisableOnClick()
         {
-            disableControlButtons();
+            disableLabelControlButtons();
             button_previous.IsEnabled = false;
             refresh();
         }
@@ -278,34 +343,73 @@ namespace NewsLabel
             controller.LoadNextNewsPair();
         }
 
-        private void button_selectnewsfile_click(object sender, RoutedEventArgs e)
-        {
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            dlg.DefaultExt = ".txt";
-            dlg.Filter = "All files (*.*)|*.*|CSV files (*.csv)|*.csv|Text files (*.txt)|*.txt";
-            bool? result = dlg.ShowDialog();
-            if (result == true)
-            {
-                newsFilePath = dlg.FileName;
-                updatePathText();
-            }
-        }
-
-        private void button_start_click(object sender, RoutedEventArgs e)
-        {
-            controller.InitNewsFileHandler(sourceFilePath, newsFilePath);
-            refresh();
-            enableControlButtons();
-            controller.InitActiveNewsPairList();
-            textblock_outputfilepath.Text = OUTPUT_FILE_HEADER + controller.getOutputFileName();
-            textblock_linenum.Text = LINE_NUM_HEADER + controller.getCurrentLineNum();
-            textblock_commontitlewords.Text = COMMON_TITLE_WORDS_HEADER + controller.CurrentNewsPair?.CommonTitleWords.ToString();
-        }
-
         private static Action EmptyDelegate = delegate () { };
         private void refresh()
         {
             Dispatcher.Invoke(DispatcherPriority.SystemIdle, EmptyDelegate);
+        }
+
+        private void startNewLabelWork(LabelWork work)
+        {
+            disableFileControlButtons();
+            controller.InitNewsFileHandler(work);
+            refresh();
+            enableLabelControlButtons();
+            controller.InitActiveNewsPairList();
+            textblock_sourcefilepath.Text = SRC_FILE_HEADER + work.SourceFilePath;
+            textblock_newsfilepath.Text = NEWS_CONTENT_FILE_HEADER + work.ContentFilePath;
+            textblock_outputfilepath.Text = OUTPUT_FILE_HEADER + controller.getOutputFileName();
+            textblock_linenum.Text = LINE_NUM_HEADER + controller.getCurrentLineNum();
+            textblock_commontitlewords.Text = COMMON_TITLE_WORDS_HEADER + controller.CurrentNewsPair?.CommonTitleWords.ToString();
+            enableFileControlButtons();
+        }
+
+        private void button_new_label_click(object sender, RoutedEventArgs e)
+        {
+            NewLabelWindow newLabel = new NewLabelWindow();
+            newLabel.ShowDialog();
+            LabelWork result = newLabel.Result;
+            if (result != null)
+            {
+                controller.WriteProgress();
+                startNewLabelWork(result);
+            }
+        }
+
+        private void button_load_click(object sender, RoutedEventArgs e)
+        {
+            LoadWindow win = new LoadWindow(controller.ProgressManager);
+            win.ShowDialog();
+            LabelWork result = win.Result;
+            if(result != null)
+            {
+                controller.WriteProgress();
+                if(result.StartingLineNum > 100)
+                {
+                    displayLoadingScreen();
+                }
+                startNewLabelWork(result);
+            }
+        }
+
+        private void button_toggle_uncertain_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if(controller.CurrentNewsPair != null)
+                controller.CurrentNewsPair.LabelUncertain = false;
+        }
+
+        private void button_toggle_uncertain_Checked(object sender, RoutedEventArgs e)
+        {
+            if (controller.CurrentNewsPair != null)
+                controller.CurrentNewsPair.LabelUncertain = true;
+        }
+
+        private void OnMainWindowClose(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            controller?.DestroyNewsFileHandler();
+            controller?.WriteProgress();
+            if(lockSuccess)
+                unlockCurrDirectory();
         }
     }
 }

@@ -28,6 +28,21 @@ namespace NewsLabel
                 OnPropertyChanged();
             }
         }
+
+        private bool uncertain;
+        public bool LabelUncertain
+        {
+            get
+            {
+                return uncertain;
+            }
+            set
+            {
+                uncertain = value;
+                OnPropertyChanged();
+            }
+        }
+
         private int lineNum;
         public int LineNum
         {

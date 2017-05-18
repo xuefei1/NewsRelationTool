@@ -12,7 +12,7 @@ namespace NewsLabel
 {
     public class ChineseDateTimeMatcher
     {
-        private string patternMonthDay = @"[\s]*[0-9]+[\s]*月[\s]*[0-9]+[\s]*日";
+        private string patternMonthDay = @"[\s]*[0-9]+[\s]*月[\s]*[0-9]+[\s]*[日|号]";
 
         public void HighlightMonthDayInString(TextBlock block, string text)
         {

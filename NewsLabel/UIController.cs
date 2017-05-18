@@ -10,7 +10,11 @@ namespace NewsLabel
     public class UIController
     {
         private static readonly int BACK_LIMIT_DEFAULT = 2;
+
         public NewsPair CurrentNewsPair;
+        public ProgressManager ProgressManager;
+
+        private LabelWork labelWork;
         private NewsFileHandler handler;
         private List<NewsPair> currentActivePairs;
         private int currentNewsPairIndex = 0;
@@ -35,11 +39,13 @@ namespace NewsLabel
         public UIController()
         {
             currentActivePairs = new List<NewsPair>();
+            ProgressManager = new ProgressManager();
         }
 
         public UIController(int backLimit)
         {
             currentActivePairs = new List<NewsPair>();
+            ProgressManager = new ProgressManager();
             if (backLimit > BACK_LIMIT_DEFAULT)
             {
                 this.backLimit = backLimit;
@@ -86,13 +92,14 @@ namespace NewsLabel
             OnNewsFileHandlerDestroy?.Invoke();
         }
 
-        public void InitNewsFileHandler(string srcFileName, string newsFileName)
+        public void InitNewsFileHandler(LabelWork work)
         {
             if(handler != null)
             {
                 DestroyNewsFileHandler();
             }
-            handler = new NewsFileHandler(new NewsFileHandlerConfig(), onContentUpdate, srcFileName, newsFileName);
+            labelWork = work;
+            handler = new NewsFileHandler(new NewsFileHandlerConfig(), onContentUpdate, work);
             OnNewsFileHandlerInit?.Invoke();
         }
 
@@ -173,6 +180,22 @@ namespace NewsLabel
             }
             currentActivePairs.Add(next);
             return false;
+        }
+
+        public void WriteProgress()
+        {
+            if(labelWork == null || labelWork.ProgressFileName.Length == 0)
+            {
+                return;
+            }
+            if (isAtEOF)
+            {
+                ProgressManager.deleteSaveFile(labelWork);
+            }
+            else if (CurrentNewsPair != null)
+            {
+                ProgressManager.createNewSaveFile(CurrentNewsPair.LineNum, labelWork);
+            }
         }
     }
 }

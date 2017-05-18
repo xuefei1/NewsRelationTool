@@ -1,0 +1,45 @@
+﻿<Window x:Class="NewsLabel.NewLabelWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NewsLabel"
+        mc:Ignorable="d"
+        Title="新任务" Height="500" Width="480">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+            <Button TextBlock.FontSize="15" Content="选择源文件" Width="140" Padding="15 5 15 5" Name="button_select_source" Click="button_select_source_click" Margin="0 0 25 0"></Button>
+            <Button TextBlock.FontSize="15" Content="选择内容文件" Width="140" Padding="15 5 15 5" Name="button_select_content" Click="button_select_content_click" Margin="0 0 25 0"></Button>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="5">
+            <TextBlock Margin="0 25 0 0" Name="textblock_sourcefilepath_header" FontSize="15">新闻源文件：</TextBlock>
+            <TextBlock Margin="0 0 0 0" Name="textblock_sourcefilepath" FontSize="13"></TextBlock>
+            <TextBlock Margin="0 25 0 0" Name="textblock_newsfilepath_header" FontSize="15">新闻内容文件：</TextBlock>
+            <TextBlock Margin="0 0 0 0" Name="textblock_newsfilepath" FontSize="13"></TextBlock>
+            <TextBlock Margin="0 25 0 0" Name="textblock_outputfile_header" FontSize="15">输出文件：</TextBlock>
+            <StackPanel Margin="0 0 0 0" Orientation="Horizontal">
+                <TextBox Name="textbox_outputfile" FontSize="15" Width="300"></TextBox>
+                <TextBlock Margin="5 0 0 0" Name="textblock_outputfile_ext" FontSize="15">输出文件无后缀</TextBlock>
+            </StackPanel>
+            <TextBlock Margin="0 25 0 0" Name="textblock_uncertainfile_header" FontSize="15">不确定的标注输出文件：</TextBlock>
+            <StackPanel Margin="0 0 0 0" Orientation="Horizontal">
+                <TextBox Name="textbox_uncertainfile" FontSize="15" Width="300"></TextBox>
+                <TextBlock Margin="5 0 0 0" Name="textblock_uncertainfile_notes" FontSize="15">输出文件无后缀</TextBlock>
+            </StackPanel>
+            <TextBlock Margin="0 25 0 0" Name="textblock_savefile_header" FontSize="15">进度文件：</TextBlock>
+            <StackPanel Margin="0 0 0 0" Orientation="Horizontal">
+                <TextBox x:Name="textbox_savefile" FontSize="15" Width="300"/>
+                <TextBlock Margin="5 0 0 0" x:Name="textblock_savefile_notes" FontSize="15"><Run Text="不需保存可不填"/></TextBlock>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5">
+            <Button TextBlock.FontSize="15" Content="取消" Width="140" Padding="15 5 15 5" x:Name="button_cancel" Click="button_cancel_click" Margin="0 0 25 0"/>
+            <Button TextBlock.FontSize="15" Content="开始" Width="140" Padding="15 5 15 5" x:Name="button_start" Click="button_start_click" Margin="0 0 25 0" IsEnabled="False"/>
+        </StackPanel>
+    </Grid>
+</Window>

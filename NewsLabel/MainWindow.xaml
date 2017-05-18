@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NewsLabel"
         mc:Ignorable="d"
+        Closing="OnMainWindowClose"
         Title="NewsLabel" Height="860" Width="1440">
     <Grid>
         <Grid.RowDefinitions>
@@ -13,10 +14,8 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
-            <Button TextBlock.FontSize="15" Content="Done" Width="160" Padding="15 5 15 5" Name="button_done" Click="button_done_click" Margin="0 0 25 0"></Button>
-            <Button TextBlock.FontSize="15" Content="Select Source File" Width="160" Padding="15 5 15 5" Name="button_selectfile" Click="button_selectfile_click"></Button>
-            <Button TextBlock.FontSize="15" Margin="25 0 0 0" Content="Select News File" Width="160" Padding="15 5 15 5" Name="button_selectnewsfile" Click="button_selectnewsfile_click"></Button>
-            <Button TextBlock.FontSize="15" Margin="25 0 0 0" Content="Start" Width="160" Padding="15 5 15 5" Name="button_start" Click="button_start_click"></Button>
+            <Button TextBlock.FontSize="14" Content="新任务" Width="120" Padding="15 5 15 5" Name="button_new_label" Click="button_new_label_click" Margin="0 0 25 0"></Button>
+            <Button TextBlock.FontSize="14" Content="读取" Width="120" Padding="15 5 15 5" Name="button_load" Click="button_load_click" Margin="0 0 25 0"></Button>
         </StackPanel>
         <StackPanel Margin="5" Orientation="Vertical" Grid.Row="1">
             <Rectangle Height="1" Fill="LightGray"></Rectangle>
@@ -35,8 +34,7 @@
             </Grid.RowDefinitions>
             <Rectangle Grid.Row ="0" Fill="LightGray"></Rectangle>
             <DockPanel Panel.ZIndex="2" Grid.Row="1" Background="Gray" Name="dockpanel_eof_mask" Visibility="Hidden">
-                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontSize="36">
-                End of File
+                <TextBlock Name="textblock_mask_content" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontSize="36" Text="">
                 </TextBlock>
             </DockPanel>
             <Grid Grid.Row="1">
@@ -105,14 +103,15 @@
             </Grid>
             <Rectangle Grid.Row ="2" Fill="LightGray"></Rectangle>
             <DockPanel Grid.Row="3" Margin="0 10 0 0">
-                <Button TextBlock.FontSize="15" Content="Overlap" Name="button_overlap" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Click="button_overlap_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Related" Name="button_related" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_related_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Contradict" Name="button_contradict" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_contrdict_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Follow-up" Name="button_followup" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_followup_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Not Related" Name="button_notrelated" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_notrelated_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Subsumption" Name="button_subsumption" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_subsumption_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Equivalent" Name="button_equivalent" DockPanel.Dock="Right" Width="150" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_equivalent_click"></Button>
-                <Button TextBlock.FontSize="15" Content="Previous" TextBlock.FontStyle="Oblique" Name="button_previous" DockPanel.Dock="Left" Width="150" HorizontalAlignment="Left" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_previous_click"></Button>
+                <Button TextBlock.FontSize="14" Content="内容重叠" Name="button_overlap" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Click="button_overlap_click"></Button>
+                <Button TextBlock.FontSize="14" Content="主题相关" Name="button_related" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_related_click"></Button>
+                <Button TextBlock.FontSize="14" Content="内容矛盾" Name="button_contradict" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_contrdict_click"></Button>
+                <Button TextBlock.FontSize="14" Content="内容跟进" Name="button_followup" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_followup_click"></Button>
+                <Button TextBlock.FontSize="14" Content="完全无关" Name="button_notrelated" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_notrelated_click"></Button>
+                <Button TextBlock.FontSize="14" Content="内容包含" Name="button_subsumption" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_subsumption_click"></Button>
+                <Button TextBlock.FontSize="14" Content="内容相同" Name="button_equivalent" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_equivalent_click"></Button>
+                <ToggleButton TextBlock.FontSize="14" Content="不确定" Name="button_toggle_uncertain" DockPanel.Dock="Right" Width="120" HorizontalAlignment="Right" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Unchecked="button_toggle_uncertain_Unchecked" Checked="button_toggle_uncertain_Checked"></ToggleButton>
+                <Button TextBlock.FontSize="14" Content="上一个" TextBlock.FontStyle="Oblique" Name="button_previous" DockPanel.Dock="Left" Width="120" HorizontalAlignment="Left" VerticalAlignment="Stretch" Padding="15 5 15 5" Margin="0 0 25 0" Click="button_previous_click"></Button>
             </DockPanel>
         </Grid>
     </Grid>

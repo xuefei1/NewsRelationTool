@@ -16,9 +16,10 @@ namespace NewsLabel
         private StreamReader inputFileReader;
         private StreamReader newsFileReader;
         private StreamWriter outputFileWriter;
+        private StreamWriter uncertainOutputFileWriter;
         private BackgroundWorker contentReadWorker;
         private ConcurrentQueue<NewsPair> contentReadQ;
-        private readonly string LOADING = "Loading";
+        private readonly string LOADING = "读取中";
         public string OutputFileName;
         public int CurrentLineNum = 0;
         public int CurrentContentFileLineNum = 0;
@@ -27,19 +28,35 @@ namespace NewsLabel
         public OnNewsContentUpdateDelegate OnNewsContentUpdate;
         private object sharedWorkerResourceLock = new object();
 
-        public NewsFileHandler(NewsFileHandlerConfig conf, OnNewsContentUpdateDelegate del, string fullFileName, string newsFileName = "")
+        private LabelWork labelWork;
+
+        public NewsFileHandler(NewsFileHandlerConfig conf, OnNewsContentUpdateDelegate del, LabelWork work)
         {
             config = conf;
-            inputFileReader= new StreamReader(fullFileName, Encoding.UTF8, true);
+            labelWork = work;
+            inputFileReader = new StreamReader(labelWork.SourceFilePath, Encoding.UTF8, true);
             contentReadQ = new ConcurrentQueue<NewsPair>();
-            if (newsFileName.Length != 0)
+            if (labelWork.ContentFilePath.Length != 0)
             {
-                newsFileReader = new StreamReader(newsFileName, Encoding.UTF8, true);
+                newsFileReader = new StreamReader(new FileStream(labelWork.ContentFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite), Encoding.UTF8, true);
             }
-            OutputFileName = Path.GetFileNameWithoutExtension(fullFileName) + "_output.csv";
-            cleanOutputFile(OutputFileName);
-            outputFileWriter = new StreamWriter(new FileStream(OutputFileName, FileMode.Create, FileAccess.ReadWrite), Encoding.UTF8);
+            OutputFileName = labelWork.OutputFileName + labelWork.OutputFileExtension;
+            outputFileWriter = new StreamWriter(new FileStream(OutputFileName, FileMode.Append, FileAccess.Write), Encoding.UTF8);
             OnNewsContentUpdate = del;
+            advanceReaderToLine(work.StartingLineNum);
+        }
+
+        private void advanceReaderToLine(int targetLineNum)
+        {
+            if(inputFileReader == null || targetLineNum <= 1)
+            {
+                return;
+            }
+            while(CurrentLineNum < targetLineNum - 1 && inputFileReader.ReadLine() != null)
+            {
+                CurrentLineNum++;
+                newsFileReader?.ReadLine();
+            }
         }
 
         private void startContentReadWorker(NewsPair pair)
@@ -78,7 +95,7 @@ namespace NewsLabel
             string[] rv = new string[config.NumElementNewsContentFile];
             for (int i = 0; i < rv.Length; i++)
             {
-                rv[i] = "(no content found in news file)";
+                rv[i] = "(无内容)";
             }
             lock (sharedWorkerResourceLock)
             {
@@ -153,7 +170,7 @@ namespace NewsLabel
             NewsPair rv = null;
             try
             {
-                if (split.Length == config.NumElementFullSourceFile)
+                if (split.Length >= config.NumElementFullSourceFile)
                 {
                     rv = new NewsPair(CurrentLineNum, split, split[config.News1TitleIndex],
                     split[config.News1ContentIndex],
@@ -162,7 +179,7 @@ namespace NewsLabel
                     (int)double.Parse(split[config.CommonTitleWordsIndex])
                     );
                 }
-                else if(split.Length == config.NumElementSimplifiedSourceFile)
+                else if(split.Length >= config.NumElementSimplifiedSourceFile)
                 {
                     rv = new NewsPair(CurrentLineNum, split, split[config.News1TitleIndex],
                     LOADING,
@@ -183,7 +200,7 @@ namespace NewsLabel
 
         private string getOutputString(NewsPair pair)
         {
-            string[] tmp = new string[pair.OriginalContent.Length - 2];
+            string[] tmp = new string[pair.OriginalContent.Length];
             for(int i = 0; i < tmp.Length; i++)
             {
                 tmp[i] = pair.OriginalContent[i];
@@ -192,11 +209,38 @@ namespace NewsLabel
             return string.Join(config.SeparatorWrite, tmp);
         }
 
+        private string getUncertainOutputString(NewsPair pair)
+        {
+            string[] tmp = new string[pair.OriginalContent.Length + 1];
+            for (int i = 0; i < pair.OriginalContent.Length; i++)
+            {
+                tmp[i] = pair.OriginalContent[i];
+            }
+            tmp[config.RelationLabelIndex] = pair.RelationLabel;
+            tmp[pair.OriginalContent.Length] = pair.LineNum.ToString();
+            return string.Join(config.SeparatorWrite, tmp);
+        }
+
         public void WriteToOutputFile(NewsPair pair)
         {
             string val = getOutputString(pair);
             outputFileWriter.WriteLine(val);
             outputFileWriter.Flush();
+            if (pair.LabelUncertain)
+            {
+                WriteToUncertainOutputFile(pair);
+            }
+        }
+
+        private void WriteToUncertainOutputFile(NewsPair pair)
+        {
+            if(uncertainOutputFileWriter == null)
+            {
+                uncertainOutputFileWriter = new StreamWriter(new FileStream(labelWork.UncertainOutputFileName, FileMode.Append, FileAccess.Write), Encoding.UTF8);
+            }
+            string val = getUncertainOutputString(pair);
+            uncertainOutputFileWriter.WriteLine(val);
+            uncertainOutputFileWriter.Flush();
         }
 
         public void Destroy()
@@ -205,6 +249,8 @@ namespace NewsLabel
             inputFileReader = null;
             outputFileWriter?.Close();
             outputFileWriter = null;
+            uncertainOutputFileWriter?.Close();
+            uncertainOutputFileWriter = null;
             lock (sharedWorkerResourceLock)
             {
                 newsFileReader?.Close();

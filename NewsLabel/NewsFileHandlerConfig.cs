@@ -9,7 +9,7 @@ namespace NewsLabel
     public class NewsFileHandlerConfig
     {
         private string[] separatorRead = { "|" };
-        private string separatorWrite = ",";
+        private string separatorWrite = "|";
         private int numElementFullSourceFile = 6;
         private int numElementSourceFile = 4;
         private int numElementNewsContentFile = 4;
